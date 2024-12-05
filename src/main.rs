@@ -79,9 +79,7 @@ impl eframe::App for MyApp {
                 ui.image("file:///home/rose/.steam/steam/steamapps/workshop/content/431960/894376172/preview.jpg");
                 ui.image(format!("file://{0}{1}", self.location, "894376172/preview.jpg"));
                 ui.image("file:///home/rose/.steam/steam/steamapps/workshop/content/431960/894376172/preview.jpg");
-                ui.image("file:///home/rose/Desktop/swappy-20241201_193746.png");
             });
-            //ui.image("file:///home/rose/Desktop/swappy-20241201_193746.png");
             //ui.image(egui::include_image!(
             //    "../../../crates/egui/assets/ferris.png"
             //));
