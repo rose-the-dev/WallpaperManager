@@ -3,13 +3,13 @@ name = "wallpaper-gui"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "wallpaper-gui"
-path = "src/manager/main.rs"
+#[[bin]]
+#name = "wallpaper-gui"
+#path = "src/manager/main.rs"
 
-[[bin]]
-name = "wallpaper-runner"
-path = "src/runner/main.rs"
+#[[bin]]
+#name = "wallpaper-runner"
+#path = "src/runner/main.rs"
 
 
 [dependencies]
