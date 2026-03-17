@@ -1,32 +1,34 @@
 {
-  description = "Wallpaper engine gui";
+  description = "Wallpaper engine manager with systemd user service";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-      in
-      {
-        # devShells.default is the development environment
-        # It's activated with 'nix develop' or automatically via direnv
-        # Documentation: https://nixos.wiki/wiki/Development_environment_with_nix-shell
-        devShells.default = pkgs.mkShell {
-              # Packages to include in the shell environment
-              buildInputs = with pkgs; [
-                mpv
-                pkg-config
-              ];
+  outputs = { self, nixpkgs }:
+  let
+    pkgs = nixpkgs.legacyPackages."x86_64-linux";
+    wallpaperPkg = pkgs.callPackage ./nix/package.nix { };
+  in
+  {
+    packages."x86_64-linux".default = wallpaperPkg;
+    overlays.default = final: prev: {
+      wallpaper-manager = wallpaperPkg;
+    };
 
-              shellHook = ''
-                echo "Bruh"
-              '';
+    devShells.default = pkgs.mkShell rec {
+      buildInputs = with pkgs; [
+        pkg-config
+      ];
+      packages = with pkgs; [  ];
 
-              PROJECT_NAME = "wallpaper-engine";
-            };
-      });
+      shellHook = ''
+        echo "Bruh"
+      '';
+
+      PROJECT_NAME = "wallpaper-engine";
+    };
+    nixosModules.wallpaper-manager = import ./nix/module.nix;
+    homeManagerModules.wallpaper-manager = import ./nix/module.nix;
+  };
 }
