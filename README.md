@@ -13,7 +13,7 @@ Example flake.nix:
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    wallpaper-engine.url = "github:rose-the-dev/WallpaperManager";
+    wallpaper-engine.url = "github:rose-the-dev/wallpaper-engine";
   };
   outputs = inputs@{ nixpkgs, home-manager, hyprland, wallpaper-engine, ... }:
   let
