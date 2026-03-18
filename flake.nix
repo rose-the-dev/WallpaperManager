@@ -27,7 +27,7 @@
       RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
       LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";
     };
-    nixosModules.wallpaper-manager = import ./nix/module.nix;
-    homeManagerModules.wallpaper-manager = import ./nix/module.nix;
+    #nixosModules.wallpaper-engine = import ./nix/module.nix;
+    homeManagerModules.wallpaper-engine = import ./nix/module.nix;
   };
 }

@@ -30,5 +30,6 @@ in
       Install.WantedBy = [ "default.target" ];
     };
     #environment.systemPackages = [ cfg.package ];
+    home.packages = [ cfg.package ];
   };
 }

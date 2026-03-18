@@ -10,7 +10,6 @@ rustPlatform.buildRustPackage {
   cargoLock = {lockFile = ../Cargo.lock;};
   #cargoHash = "sha256-KKi+r2D7bnJn8tVnjJx1x3jFsakijMQ8YKBFYBiB0RY=";
 
-  #nativeBuildInputs = with pkgs; [ libGL libGLU ];
   buildInputs = with pkgs; [ pkg-config linux-wallpaperengine libxcb wayland wayland-protocols wayland-scanner ];
 
   #postInstall = ''
