@@ -18,7 +18,7 @@
 
     devShells.default = pkgs.mkShell rec {
       buildInputs = with pkgs; [
-        pkg-config
+        pkg-config xcb
       ];
       packages = with pkgs; [  ];
 

@@ -10,12 +10,12 @@ rustPlatform.buildRustPackage {
   cargoLock = {lockFile = ../Cargo.lock;};
   #cargoHash = "sha256-KKi+r2D7bnJn8tVnjJx1x3jFsakijMQ8YKBFYBiB0RY=";
 
-  buildInputs = with pkgs; [ linux-wallpaperengine ];
+  buildInputs = with pkgs; [ linux-wallpaperengine libxcb wayland wayland-protocols];
 
-  postInstall = ''
-    install -Dm755 target/release/wallpaper-runner $out/bin/wallpaper-runner
-    install -Dm755 target/release/wallpaper-gui $out/bin/wallpaper-gui
-  '';
+  #postInstall = ''
+  #  install -Dm755 target/release/wallpaper-runner $out/bin/wallpaper-runner
+  #  install -Dm755 target/release/wallpaper-gui $out/bin/wallpaper-gui
+  #'';
 
   desktopItems = [
       (makeDesktopItem {
