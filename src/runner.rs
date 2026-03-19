@@ -2,7 +2,7 @@ mod common;
 
 use crate::common::*;
 use std::process::Command;
-use ctrlc::set_handler;
+//use ctrlc::set_handler;
 
 fn main() {
     env_logger::init();

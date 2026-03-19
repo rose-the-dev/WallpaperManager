@@ -12,7 +12,7 @@ name = "wallpaper-runner"
 path = "src/runner.rs"
 
 [dependencies]
-ctrlc = "3.5.1"
+#ctrlc = "3.5.1"
 display-info = "0.5.7"
 #eframe = { version = "0.33.3", features = ["wayland", "serde", "glow"], default-features = false }
 eframe = "0.33.3"
