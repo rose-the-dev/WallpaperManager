@@ -24,6 +24,7 @@ rustPlatform.buildRustPackage {
 
     wrapProgram $out/bin/wallpaper-gui --prefix PATH : "${lib.makeBinPath [ pkgs.wayland pkgs.wayland-protocols pkgs.wayland-scanner ]}"
 
+    mkdir -p $out/share/applications
     cat > $out/share/applications/wallpaper-engine.desktop <<EOF
         [Desktop Entry]
         Type=Application
