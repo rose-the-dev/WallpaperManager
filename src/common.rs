@@ -5,7 +5,7 @@ use eframe::egui::Image;
 use serde::{Deserialize, Serialize};
 
 
-pub const CONFIG_DIR: &str = ".config/wallpaper-gui";
+pub const CONFIG_DIR: &str = ".config/wallpaper-engine";
 pub const CONFIG_FILE: &str = "wallpaper.conf";
 pub const WALLPAPER_DIR: &str = "wallpapers";
 
