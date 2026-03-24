@@ -54,3 +54,8 @@ Example flake.nix:
 
 ### Other distros
 I do have plans to create a build and install script for other distros, but right now it's nixos only.
+
+
+## Quirks
+linux-wallpaper engine for some reason plays audio only when passed with the --silent flag, I built the wrapper app with the idea that --silent makes it... silent.
+It does not.
