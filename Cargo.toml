@@ -1,25 +1,21 @@
 [package]
-name = "wallpaper-engine-gui"
+name = "wallpaper-engine-collective"
 version = "0.1.1"
 edition = "2021"
 
-[[bin]]
-name = "wallpaper-gui"
-path = "src/main.rs"
 
 [[bin]]
-name = "wallpaper-runner"
-path = "src/runner.rs"
+name = "wallpaper-engine"
+path = "wallpaper-engine/src/main.rs"
 
-[dependencies]
-#ctrlc = "3.5.1"
-display-info = "0.5.7"
-#eframe = { version = "0.33.3", features = ["wayland", "serde", "glow"], default-features = false }
-eframe = "0.33.3"
-#egui-winit = { version = "0.33.3", features = ["wayland", "serde"], default-features = false}
-egui_extras = { version = "0.33.3", features = ["default", "file", "image", "gif"] }
-image = { version = "0.25.9", features = ["jpeg", "png"] }
-#winit = { version = "0.30.13", features = ["wayland", "wayland-client", "wayland-protocols"], default-features = false}
-env_logger = "0.11.8"
-serde = "1.0.228"
-serde_json = "1.0.149"
+[[bin]]
+name = "wallpaper-ctl"
+path = "wallpaper-ctl/src/main.rs"
+
+[[bin]]
+name = "wallpaper-manager"
+path = "wallpaper-manager/src/main.rs"
+
+[workspace]
+resolver = "3"
+members = ["wallpaper-engine", "wallpaper-ctl", "wallpaper-manager"]

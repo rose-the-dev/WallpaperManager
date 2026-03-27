@@ -6,18 +6,11 @@ rustPlatform.buildRustPackage {
   version = "0.1.1";
 
   src = lib.cleanSource ./..;
-
   cargoLock = {lockFile = ../Cargo.lock;};
-  #cargoHash = "sha256-KKi+r2D7bnJn8tVnjJx1x3jFsakijMQ8YKBFYBiB0RY=";
 
   nativeBuildInputs = with pkgs; [ makeWrapper ];
   buildInputs = with pkgs; [ libxcb ];
   packages = with pkgs; [ linux-wallpaperengine ];
-
-  #postInstall = ''
-  #  install -Dm755 target/release/wallpaper-runner $out/bin/wallpaper-runner
-  #  install -Dm755 target/release/wallpaper-gui $out/bin/wallpaper-gui
-  #'';
 
   postInstall = ''
     wrapProgram $out/bin/wallpaper-runner --prefix PATH : "${lib.makeBinPath [ linux-wallpaperengine ]}"
