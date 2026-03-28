@@ -2,6 +2,7 @@
 name = "wallpaper-engine-collective"
 version = "0.1.1"
 edition = "2021"
+authors = ["Rose G. <rose@rosethedev.com>"]
 
 
 [[bin]]
@@ -16,6 +17,27 @@ path = "wallpaper-ctl/src/main.rs"
 name = "wallpaper-manager"
 path = "wallpaper-manager/src/main.rs"
 
+[lib]
+name = "wallpaper_common"
+path = "wallpaper_common/src/lib.rs"
+
 [workspace]
-resolver = "3"
-members = ["wallpaper-engine", "wallpaper-ctl", "wallpaper-manager"]
+resolver = "2"
+members = ["wallpaper-engine", "wallpaper-ctl", "wallpaper-manager", "wallpaper_common"]
+
+[dependencies]
+# manager
+display-info = "0.5.7"
+eframe = "0.33.3"
+egui_extras = { version = "0.33.3", features = ["default", "file", "image", "gif"] }
+image = { version = "0.25.9", features = ["jpeg", "png", "bmp"] }
+env_logger = "0.11.8"
+serde = "1.0.228"
+serde_json = "1.0.149"
+
+# engine
+cairo-rs = {version = "0.22.0", features = ["png"]}
+png = "0.18.1"
+glutin = "0.32.3"
+smithay-client-toolkit = "0.20.0"
+wayland-client = "0.31.13"

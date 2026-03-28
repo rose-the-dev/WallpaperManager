@@ -4104,6 +4104,9 @@ dependencies = [
 [[package]]
 name = "wallpaper-ctl"
 version = "0.1.1"
+dependencies = [
+ "wallpaper_common",
+]
 
 [[package]]
 name = "wallpaper-engine"
@@ -4114,12 +4117,27 @@ dependencies = [
  "image",
  "png",
  "smithay-client-toolkit 0.20.0",
+ "wallpaper_common",
  "wayland-client",
 ]
 
 [[package]]
 name = "wallpaper-engine-collective"
 version = "0.1.1"
+dependencies = [
+ "cairo-rs",
+ "display-info",
+ "eframe",
+ "egui_extras",
+ "env_logger",
+ "glutin",
+ "image",
+ "png",
+ "serde",
+ "serde_json",
+ "smithay-client-toolkit 0.20.0",
+ "wayland-client",
+]
 
 [[package]]
 name = "wallpaper-manager"
@@ -4133,6 +4151,10 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "wallpaper_common"
+version = "0.1.0"
 
 [[package]]
 name = "wasip2"
