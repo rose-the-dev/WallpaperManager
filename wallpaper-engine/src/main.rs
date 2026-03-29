@@ -1,6 +1,6 @@
 mod extra;
 
-use cairo::{Context, Format, ImageSurface, Matrix, SurfacePattern};
+use cairo::{Context, Format, ImageSurface, SurfacePattern};
 use smithay_client_toolkit::{
                              delegate_compositor, delegate_layer, delegate_output, delegate_pointer, delegate_registry, delegate_seat, delegate_shm, registry_handlers,
                              compositor::{CompositorHandler, CompositorState},
@@ -15,7 +15,7 @@ use smithay_client_toolkit::{
                                  WaylandSurface,
                              },
                              shm::{slot::SlotPool, Shm, ShmHandler},
-                             reexports::calloop::{EventLoop, timer::{TimeoutAction, Timer}, Interest, Mode}
+                             reexports::calloop::{EventLoop, Interest, Mode}
 };
 use wayland_client::{
     globals::registry_queue_init,
@@ -23,18 +23,16 @@ use wayland_client::{
     Connection,
     Proxy,
     QueueHandle,
-    globals::GlobalList,
     protocol::wl_output::WlOutput
 };
 use std::borrow::Borrow;
 use std::time::Duration;
 use std::collections::{HashMap};
 use std::fs::File;
-use std::io::{Read, Seek, Write};
+use std::io::{Read, Write};
 use std::net::Shutdown;
-use std::os::unix::net::{UnixListener, UnixStream};
+use std::os::unix::net::UnixListener;
 use smithay_client_toolkit::reexports::calloop::PostAction;
-use smithay_client_toolkit::shm::slot::Buffer;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -54,7 +52,7 @@ fn main() {
     let conn = Connection::connect_to_env().unwrap();
 
     let mut sub_queue = EventLoop::<SimpleLayer>::try_new().unwrap();
-    let (globals, mut event_queue) = registry_queue_init(&conn).unwrap();
+    let (globals, event_queue) = registry_queue_init(&conn).unwrap();
     //let globals = Box::new(globals);
     let qh: QueueHandle<SimpleLayer> = event_queue.handle();
     let compositor = CompositorState::bind(&globals, &qh).expect("wl_compositor is not available");
@@ -128,7 +126,7 @@ fn main() {
     //}).unwrap();
     sub_queue_handle.insert_source(smithay_client_toolkit::reexports::calloop::generic::Generic::new(sock, Interest::READ, Mode::Edge), |event, metadata, shared_data| {
         if event.readable {
-            let (mut stream, addr) = metadata.accept().unwrap();
+            let (mut stream, _addr) = metadata.accept().unwrap();
             let mut reader = wallpaper_common::SocketReader::new(255);
             let recv = reader.read_socket(&mut stream);
             //let recv = wallpaper_common::read_socket(&mut stream);
@@ -269,7 +267,7 @@ impl SimpleLayer {
         //let mut layer_num = layer_num;
         println!("Draw");
 
-        for (output, layer) in self.layers.iter_mut() {
+        for (_output, layer) in self.layers.iter_mut() {
             if !layer.configured {
                 return;
             }
@@ -326,7 +324,7 @@ impl CompositorHandler for SimpleLayer {
 
     fn frame(&mut self,
              _conn: &Connection,
-             qh: &QueueHandle<Self>,
+             _qh: &QueueHandle<Self>,
              _surface: &wl_surface::WlSurface,
              _time: u32)
     {
@@ -426,7 +424,7 @@ impl LayerShellHandler for SimpleLayer {
 
     fn configure(&mut self,
                  _conn: &Connection,
-                 qh: &QueueHandle<Self>,
+                 _qh: &QueueHandle<Self>,
                  _layer: &LayerSurface,
                  configure: LayerSurfaceConfigure,
                  _serial: u32)
@@ -524,7 +522,7 @@ impl PointerHandler for SimpleLayer {
                 Enter { .. } => {}
                 Leave { .. } => {}
                 Motion { .. } => {
-                    self.layers.iter_mut().for_each(|(output, layer)| {
+                    self.layers.iter_mut().for_each(|(_output, layer)| {
                         let mon_pos = get_output_pos(&layer.wl_output);
                         if &event.surface == layer.layer.wl_surface() {
                             self.absolute_mouse_pos = (event.position.0 + mon_pos.0 as f64, event.position.1 + mon_pos.1 as f64);

@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, Output};
 use eframe::egui::Image;
 use serde::{Deserialize, Serialize};
-use wallpaper_common::{CONFIG_FILE, CONFIG_DIR, WALLPAPER_DIR};
+use wallpaper_common::{CONFIG_DIR, WALLPAPER_DIR};
 
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -37,8 +36,6 @@ impl Default for Config {
         }
     }
 }
-
-pub enum ServiceType {Service, None}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ScreenInfo {
@@ -89,39 +86,6 @@ pub struct Wallpaper<'a> {
     pub image: Option<Image<'a>>,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct Schemecolor {
-    pub order: u32,
-    pub text: String,
-    #[serde(rename = "type")]
-    pub r#type: String,
-    pub value: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Properties {
-    pub schemecolor: Schemecolor,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct General {
-    pub properties: Properties,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct WallpaperConfig {
-    pub contentrating: String,
-    pub description: String,
-    pub file: String,
-    pub general: General,
-    pub preview: String,
-    pub tags: Vec<String>,
-    pub title: String,
-    #[serde(rename = "type")]
-    pub r#type: String,
-    pub visibility: String,
-}
-
 pub fn read_config(config_file: String) -> Config {
     let config_data = std::fs::read_to_string(config_file).expect("Error reading config file");
     serde_json::from_str(config_data.as_str()).unwrap()
@@ -131,50 +95,47 @@ pub fn write_config(config_file: String, config: Config) {
     std::fs::write(config_file, serde_json::to_string(&config).expect("Error serializing config file")).expect("Error writing config file");
 }
 
-pub fn start_wallpaper_process(config: Config) -> Child {
-    let mut proc = Command::new("linux-wallpaperengine");
-    if config.wallpaper_engine_assets.is_some() {
-        proc.arg("--assets-dir").arg(config.wallpaper_engine_assets.as_ref().unwrap());
-    }
-    if config.no_fullscreen_pause {
-        proc.arg("--no-fullscreen-pause");
-    }
-    if config.fps.is_some() {
-        proc.arg("--fps").arg(&config.fps.unwrap().to_string());
-    }
-    if config.silent {
-        proc.arg("--silent");
-    }
-    if config.no_audio_processing {
-        proc.arg("--no-audio-processing");
-    }
-    for (mon, wp) in config.wallpapers.iter() {
-        proc.arg("--screen-root").arg(mon).arg("--bg").arg(get_wallpaper_dir(Some(wp.id.clone())));
-        proc.arg("--scaling").arg(format!("{:?}", wp.scaling).to_lowercase());
-    }
-    proc.arg("--clamp").arg(format!("{:?}", config.clamp).to_lowercase());
-    println!("{:?}", proc.get_args());
-    proc.spawn().expect("Failed to start wallpaper process.")
-}
-
-//pub fn kill_wallpaper(wallpaper_process: Option<&mut Child>) {
-pub fn kill_wallpaper() {
-    Command::new("pkill").arg("-f").arg("linux-wallpaperengine").output().expect("Failed to kill wallpaper process.");
-    //if wallpaper_process.is_some() {
-    //    wallpaper_process.unwrap().kill().expect("Unable to kill child process.");
-    //}
-}
-
-pub fn restart_wallpaper_service(service_type: ServiceType) -> std::io::Result<Output> {
-    match service_type {
-        ServiceType::Service => Command::new("systemctl").arg("--user").arg("restart").arg("wallpaper-engine.service").output(),
-        ServiceType::None => {
-            //Command::new("pkill").arg("-f").arg("linux-wallpaperengine").output().expect("Failed to kill wallpaper process.");
-            //start_wallpaper_process(read_config(CONFIG_FILE.to_string()));
-            panic!("Service only for now.")
-        },
-    }
-}
+//pub fn start_wallpaper_process(config: Config) -> Child {
+//    let mut proc = Command::new("linux-wallpaperengine");
+//    if config.wallpaper_engine_assets.is_some() {
+//        proc.arg("--assets-dir").arg(config.wallpaper_engine_assets.as_ref().unwrap());
+//    }
+//    if config.no_fullscreen_pause {
+//        proc.arg("--no-fullscreen-pause");
+//    }
+//    if config.fps.is_some() {
+//        proc.arg("--fps").arg(&config.fps.unwrap().to_string());
+//    }
+//    if config.silent {
+//        proc.arg("--silent");
+//    }
+//    if config.no_audio_processing {
+//        proc.arg("--no-audio-processing");
+//    }
+//    for (mon, wp) in config.wallpapers.iter() {
+//        proc.arg("--screen-root").arg(mon).arg("--bg").arg(get_wallpaper_dir(Some(wp.id.clone())));
+//        proc.arg("--scaling").arg(format!("{:?}", wp.scaling).to_lowercase());
+//    }
+//    proc.arg("--clamp").arg(format!("{:?}", config.clamp).to_lowercase());
+//    println!("{:?}", proc.get_args());
+//    proc.spawn().expect("Failed to start wallpaper process.")
+//}
+//pub fn kill_wallpaper() {
+//    Command::new("pkill").arg("-f").arg("linux-wallpaperengine").output().expect("Failed to kill wallpaper process.");
+//    //if wallpaper_process.is_some() {
+//    //    wallpaper_process.unwrap().kill().expect("Unable to kill child process.");
+//    //}
+//}
+//pub fn restart_wallpaper_service(service_type: ServiceType) -> std::io::Result<Output> {
+//    match service_type {
+//        ServiceType::Service => Command::new("systemctl").arg("--user").arg("restart").arg("wallpaper-engine.service").output(),
+//        ServiceType::None => {
+//            //Command::new("pkill").arg("-f").arg("linux-wallpaperengine").output().expect("Failed to kill wallpaper process.");
+//            //start_wallpaper_process(read_config(CONFIG_FILE.to_string()));
+//            panic!("Service only for now.")
+//        },
+//    }
+//}
 
 pub fn get_wallpaper_dir(wp_dir: Option<String>) -> String {
     if wp_dir.is_some() {
@@ -214,8 +175,4 @@ pub fn get_wallpaper_preview(wallpaper_dir: String) -> Result<String, std::io::E
     else {
         Err(std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"))
     }
-}
-
-pub fn get_column_count(window_width: f32, icon_width: f32) -> i32 {
-    (window_width / icon_width) as i32
 }

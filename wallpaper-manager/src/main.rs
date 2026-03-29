@@ -2,8 +2,8 @@ mod common;
 
 use std::cmp::PartialEq;
 use crate::common::*;
-use wallpaper_common::{CONFIG_FILE, CONFIG_DIR, WALLPAPER_DIR};
-use std::collections::{BTreeMap, HashMap};
+use wallpaper_common::{CONFIG_FILE, CONFIG_DIR};
+use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
 //use std::process::{Child, Command};
 use display_info::DisplayInfo;
@@ -126,9 +126,10 @@ impl MainWindow<'static> {
             self.config.wallpapers.insert(screen, ScreenInfo { id: wallpaper_id, scaling: Scaling::Default });
         }
 
-        let config_file = format!("{0}/{1}/{2}", std::env::home_dir().unwrap().to_str().unwrap(), CONFIG_DIR, CONFIG_FILE);
-        write_config(config_file, self.config.clone());
-        restart_wallpaper_service(ServiceType::Service).expect("Unable to restart service.");
+        let _config_file = format!("{0}/{1}/{2}", std::env::home_dir().unwrap().to_str().unwrap(), CONFIG_DIR, CONFIG_FILE);
+        //write_config(config_file, self.config.clone());
+        //restart_wallpaper_service(ServiceType::Service).expect("Unable to restart service.");
+        // TODO: Implement IPC to configure wallpaper-engine 2.
 
         //let wp_proc = Some(start_wallpaper_process(self.config.clone()));
         //self.wallpaper_process = wp_proc;
@@ -163,7 +164,7 @@ impl MainWindow<'static> {
 
 impl eframe::App for MainWindow<'static> {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let content = ctx.content_rect();
+        let _content = ctx.content_rect();
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -173,8 +174,7 @@ impl eframe::App for MainWindow<'static> {
                 });
                 ui.menu_button("Get wallpapers", |ui| {
                     if ui.button("WallpaperHub").clicked() {
-                        // TODO: Implement download from hub, also implement hub site.
-
+                        self.subpage = Subpage::GetWallpapers;
                         ui.close();
                     }
                     if ui.button("Import from wallpaper engine").clicked() {
@@ -184,7 +184,7 @@ impl eframe::App for MainWindow<'static> {
                 });
                 ui.menu_button("Help", |ui| {
                     if ui.button("About").clicked() {
-                        //about_modal.open();
+                        self.subpage = Subpage::About;
                         ui.close();
                     }
                 });
@@ -200,6 +200,16 @@ impl eframe::App for MainWindow<'static> {
                     ui.label(format!("Selected screen: {0}", self.select_current_screen.clone().unwrap()));
                 }
             });
+        });
+
+        egui::Area::new("save_config".into())
+            .movable(false)
+            .anchor(Align2::RIGHT_BOTTOM, [-40.0, -40.0])
+            .show(ctx, |ui| {
+            if ui.add(egui::Button::new("Save config").corner_radius(5).min_size([100.0, 35.0].into())).clicked() {
+                // TODO: Save config button.
+                println!("Save config");
+            };
         });
 
         let x = egui::SidePanel::right("side_panel").resizable(false).show(ctx, |ui| {
@@ -250,12 +260,9 @@ impl eframe::App for MainWindow<'static> {
             update = update | ui.checkbox(&mut self.config.no_fullscreen_pause, "No fullscreen pause").changed();
 
             if update {
-                //kill_wallpaper(self.wallpaper_process.as_mut());
-                write_config(format!("{0}/{1}/{2}", std::env::home_dir().unwrap().to_str().unwrap(), CONFIG_DIR, CONFIG_FILE), self.config.clone());
-                restart_wallpaper_service(ServiceType::Service).expect("Unable to restart service.");
-
-                //let wp_proc = Some(start_wallpaper_process(self.config.clone()));
-                //self.wallpaper_process = wp_proc;
+                //write_config(format!("{0}/{1}/{2}", std::env::home_dir().unwrap().to_str().unwrap(), CONFIG_DIR, CONFIG_FILE), self.config.clone());
+                //restart_wallpaper_service(ServiceType::Service).expect("Unable to restart service.");
+                // TODO: Implement IPC to configure wallpaper-engine.
             }
             ui.add_space(30.0);
             ui.separator();
@@ -270,7 +277,7 @@ impl eframe::App for MainWindow<'static> {
             Subpage::About => {
                 let area = egui::Area::new("about_panel".into())
                     .movable(false)
-                    .anchor(egui::Align2::CENTER_TOP, [0.0, 0.0])
+                    .anchor(Align2::CENTER_TOP, [0.0, 0.0])
                     .show(ctx, |ui| {
                         let bg = Self::floating_bg();
                         bg.show(ui, |ui| {
@@ -284,8 +291,8 @@ impl eframe::App for MainWindow<'static> {
             Subpage::Delete => {
                 let area = egui::Area::new("delete_panel".into())
                     .movable(false)
-                    .anchor(egui::Align2::CENTER_CENTER, [-x.response.rect.width() / 2.0, 0.0])
-                    .pivot(egui::Align2::CENTER_CENTER)
+                    .anchor(Align2::CENTER_CENTER, [-x.response.rect.width() / 2.0, 0.0])
+                    .pivot(Align2::CENTER_CENTER)
                     .show(ctx, |ui| {
                         let bg = Self::floating_bg();
                         bg.show(ui, |ui| {
@@ -326,6 +333,7 @@ impl eframe::App for MainWindow<'static> {
                     .show(ctx, |ui| {
                         let bg = Self::floating_bg();
                         bg.show(ui, |ui| {
+                            // TODO: Implement download from hub, also implement hub site.
                             if ui.button("Close").clicked() {
                                 self.subpage = Subpage::None;
                             }
