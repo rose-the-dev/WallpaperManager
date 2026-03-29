@@ -8,27 +8,21 @@
   outputs = { self, nixpkgs }:
   let
     pkgs = nixpkgs.legacyPackages."x86_64-linux";
-    wallpaperPkg = pkgs.callPackage ./nix/package.nix { };
+    wallpaper-engine = pkgs.callPackage ./nix/package.nix { };
+    #wallpaper-engine = pkgs.callPackage ./wallpaper-engine/default.nix { };
+    #wallpaper-manager = pkgs.callPackage ./wallpaper-manager/default.nix { };
+    #wallpaper-ctl = pkgs.callPackage ./wallpaper-ctl/default.nix { };
   in
   {
-    packages."x86_64-linux".default = wallpaperPkg;
+    packages."x86_64-linux".default = wallpaper-engine;
+    #packages."x86_64-linux".manager = wallpaper-manager;
+    #packages."x86_64-linux".ctl = wallpaper-ctl;
     overlays.default = final: prev: {
-      wallpaper-manager = wallpaperPkg;
-    };
-
-    devShells.default = pkgs.mkShell rec {
-      #buildInputs = with pkgs; [ linux-wallpaperengine libxkbcommon libGL wayland ];
-      #packages = with pkgs; [ linux-wallpaperengine ];
-      shellHook = ''
-        echo "Bruh"
-      '';
-
-      #PROJECT_NAME = "wallpaper-engine";
-      #RUST_LOG = "debug";
-      #RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
-      #LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";
+      wallpaper-engine = wallpaper-engine;
+      #wallpaper-manager = wallpaper-manager;
+      #wallpaper-ctl = wallpaper-ctl;
     };
     #nixosModules.wallpaper-engine = import ./nix/module.nix;
-    homeManagerModules.wallpaper-engine = import ./nix/module.nix;
+    homeManagerModules.wallpaper-engine = import ./nix/hm-module.nix;
   };
 }
