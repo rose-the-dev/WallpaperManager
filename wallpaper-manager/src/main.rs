@@ -2,6 +2,7 @@ mod common;
 
 use std::cmp::PartialEq;
 use crate::common::*;
+use wallpaper_common::{CONFIG_FILE, CONFIG_DIR, WALLPAPER_DIR};
 use std::collections::{BTreeMap, HashMap};
 use std::ops::RangeInclusive;
 //use std::process::{Child, Command};
@@ -10,6 +11,12 @@ use eframe::{egui};
 use eframe::egui::{include_image, Align2, ComboBox, Image, InnerResponse, Vec2};
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let version: bool = args.contains(&"-v".to_string()) | args.contains(&"--version".to_string());
+    if version {
+        println!("wallpaper-engine version {}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
     env_logger::init();
     //Command::new("pkill").arg("-f").arg("linux-wallpaperengine").output().expect("Failed to kill wallpaper process.");
     let options = eframe::NativeOptions {

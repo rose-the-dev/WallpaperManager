@@ -3,11 +3,8 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Output};
 use eframe::egui::Image;
 use serde::{Deserialize, Serialize};
+use wallpaper_common::{CONFIG_FILE, CONFIG_DIR, WALLPAPER_DIR};
 
-
-pub const CONFIG_DIR: &str = ".config/wallpaper-engine";
-pub const CONFIG_FILE: &str = "wallpaper.conf";
-pub const WALLPAPER_DIR: &str = "wallpapers";
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
