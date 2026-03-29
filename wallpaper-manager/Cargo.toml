@@ -4,6 +4,7 @@ version = "0.1.1"
 edition = "2021"
 
 [dependencies]
+wallpaper_common = { path = "../wallpaper_common" }
 display-info = "0.5.7"
 eframe = "0.33.3"
 egui_extras = { version = "0.33.3", features = ["default", "file", "image", "gif"] }

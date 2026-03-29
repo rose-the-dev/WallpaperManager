@@ -4150,6 +4150,7 @@ dependencies = [
  "image",
  "serde",
  "serde_json",
+ "wallpaper_common",
 ]
 
 [[package]]
