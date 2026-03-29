@@ -18,14 +18,16 @@ build:
 	cargo build $(release)
 
 install:
-	cp target/$(target)/wallpaper-gui ~/bin/wallpaper-gui
-	cp target/$(target)/wallpaper-runner ~/bin/wallpaper-runner
+	cp target/$(target)/wallpaper-ctl ~/bin/wallpaper-ctl
+	cp target/$(target)/wallpaper-manager ~/bin/wallpaper-manager
+	cp target/$(target)/wallpaper-engine ~/bin/wallpaper-engine
 
 all: build install
 
 uninstall:
+	rm target/$(target)/wallpaper-ctl
 	rm target/$(target)/wallpaper-gui
-	rm target/$(target)/wallpaper-runner
+	rm target/$(target)/wallpaper-engine
 
 help:
 	@echo "usage: make $(prog) [debug=1]"
