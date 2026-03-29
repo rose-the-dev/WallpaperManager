@@ -6,7 +6,7 @@ rustPlatform.buildRustPackage {
   version = "0.1.1";
 
   src = lib.cleanSource ./.;
-  cargoLock = {lockFile = ./Cargo.lock;};
+  cargoLock = {lockFile = ../Cargo.lock;};
 
   nativeBuildInputs = with pkgs; [ makeWrapper ];
   buildInputs = with pkgs; [ libxcb ];
