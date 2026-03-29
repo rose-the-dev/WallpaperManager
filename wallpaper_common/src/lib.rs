@@ -1,6 +1,10 @@
 use std::io::Read;
 use std::os::unix::net::UnixStream;
 
+pub const CONFIG_DIR: &str = ".config/wallpaper-engine";
+pub const CONFIG_FILE: &str = "wallpaper.conf";
+pub const WALLPAPER_DIR: &str = "wallpapers";
+
 pub fn read_socket(sock: &mut UnixStream) -> Option<String> {
     let mut out = Vec::with_capacity(255);
     let y = sock.read(out.as_mut_slice()).unwrap();

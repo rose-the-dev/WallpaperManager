@@ -27,17 +27,22 @@ use wayland_client::{
     protocol::wl_output::WlOutput
 };
 use std::borrow::Borrow;
-use std::os::fd::AsRawFd;
 use std::time::Duration;
 use std::collections::{HashMap};
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Seek, Write};
 use std::net::Shutdown;
 use std::os::unix::net::{UnixListener, UnixStream};
 use smithay_client_toolkit::reexports::calloop::PostAction;
 use smithay_client_toolkit::shm::slot::Buffer;
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let version: bool = args.contains(&"-v".to_string()) | args.contains(&"--version".to_string());
+    if version {
+        println!("wallpaper-engine version {}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
     if std::fs::exists("/tmp/wallpaper-engine.sock").unwrap() {
         std::fs::remove_file("/tmp/wallpaper-engine.sock").unwrap();
     }
@@ -134,11 +139,20 @@ fn main() {
 
                 match command {
                     "set" => {
-                        println!("{:?}", args[0]);
-                        if shared_data.layers.contains_key(args[0]) {
+                        println!("{}", args[0]);
+                        if args[0] == "all" {
+                            shared_data.layers.iter_mut().for_each(|x| {
+                                let mut file = File::open(args[1]).expect("open file");
+                                let image_surface = ImageSurface::create_from_png(&mut file).expect("Image surface creation");
+                                x.1.wallpaper = Some((args[1].to_string(), image_surface));
+                            });
+                            shared_data.draw();
+                            stream.write(b"Done.").unwrap_or(0);
+                        }
+                        else if shared_data.layers.contains_key(args[0]) {
                             let mut file = File::open(args[1]).expect("open file");
                             let image_surface = ImageSurface::create_from_png(&mut file).expect("Image surface creation");
-                            shared_data.layers.get_mut(&args[0].to_string()).unwrap().wallpaper = Some(("Custom".to_string(), image_surface));
+                            shared_data.layers.get_mut(&args[0].to_string()).unwrap().wallpaper = Some((args[1].to_string(), image_surface));
                             shared_data.draw();
                             stream.write(b"Done.").unwrap_or(0);
                         }
