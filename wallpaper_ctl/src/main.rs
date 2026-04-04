@@ -1,7 +1,3 @@
-use std::io::{Read, Write};
-use std::os::unix::net::UnixStream;
-use wallpaper_common::{SocketReader};
-
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mut help: bool = args.contains(&"-h".to_string()) | args.contains(&"--help".to_string());
@@ -37,29 +33,24 @@ fn main() {
         return;
     }
 
-    let sock = UnixStream::connect("/tmp/wallpaper-engine.sock");
-    match sock {
-        Ok(mut sock) => {
-            let mut sock_reader = SocketReader::new(1000);
+    let ipc = wallpaper_common::Ipc::connect();
+    match ipc {
+        Ok(mut ipc) => {
             match args[1].to_lowercase().as_str() {
                 "set" => {
                     ensure_parameters(&args, 2);
-                    let v = format!("set>{}:{}", args[2], args[3]);
-                    sock.write(v.as_bytes()).unwrap();
-                    println!("{}", sock_reader.read_socket(&mut sock).expect("Failed to read socket."));
-                    //println!("{}", wallpaper_common::read_socket(&mut sock).unwrap());
+                    let res = ipc.send_change_wallpaper(args.get(2).unwrap().to_string(), args.get(3).unwrap().to_string()).unwrap();
+                    println!("{}", res);
                 }
                 "list-outputs" => {
                     ensure_parameters(&args, 0);
-                    sock.write(b"list-outputs>").unwrap();
-                    println!("{}", sock_reader.read_socket(&mut sock).expect("Failed to read socket."));
-                    //println!("{}", wallpaper_common::read_socket(&mut sock).unwrap());
+                    let res = ipc.send_list_outputs().unwrap();
+                    println!("{}", res);
                 }
                 "list-wallpapers" => {
                     ensure_parameters(&args, 0);
-                    sock.write(b"list-wallpapers>").unwrap();
-                    println!("{}", sock_reader.read_socket(&mut sock).expect("Failed to read socket."));
-                    //println!("{}", wallpaper_common::read_socket(&mut sock).unwrap());
+                    let res = ipc.send_list_wallpapers().unwrap();
+                    println!("{}", res);
                 }
                 "restart" => {
                     ensure_parameters(&args, 0);

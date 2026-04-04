@@ -120,16 +120,23 @@ impl MainWindow<'static> {
         //kill_wallpaper(self.wallpaper_process.as_mut());
 
         if self.config.wallpapers.contains_key(&screen) {
-            self.config.wallpapers.get_mut(&screen).unwrap().id = wallpaper_id;
+            self.config.wallpapers.get_mut(&screen).unwrap().id = wallpaper_id.clone();
         }
         else {
-            self.config.wallpapers.insert(screen, ScreenInfo { id: wallpaper_id, scaling: Scaling::Default });
+            self.config.wallpapers.insert(screen.clone(), ScreenInfo { id: wallpaper_id.clone(), scaling: Scaling::Default });
         }
 
         let _config_file = format!("{0}/{1}/{2}", std::env::home_dir().unwrap().to_str().unwrap(), CONFIG_DIR, CONFIG_FILE);
         //write_config(config_file, self.config.clone());
         //restart_wallpaper_service(ServiceType::Service).expect("Unable to restart service.");
         // TODO: Implement IPC to configure wallpaper-engine 2.
+        let ipc = wallpaper_common::Ipc::connect();
+        match ipc {
+            Ok(mut ipc) => {
+                ipc.send_change_wallpaper(screen, wallpaper_id).unwrap();
+            }
+            Err(e) => {}
+        }
 
         //let wp_proc = Some(start_wallpaper_process(self.config.clone()));
         //self.wallpaper_process = wp_proc;

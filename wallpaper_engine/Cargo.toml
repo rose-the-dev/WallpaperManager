@@ -1,5 +1,5 @@
 [package]
-name = "wallpaper-engine"
+name = "wallpaper_engine"
 version = "0.1.1"
 edition = "2021"
 
@@ -11,3 +11,4 @@ glutin = "0.32.3"
 smithay-client-toolkit = "0.20.0"
 wayland-client = "0.31.13"
 image = {version = "0.25.9", features = ["bmp"]}
+#ffmpeg-next = "8.0.0"

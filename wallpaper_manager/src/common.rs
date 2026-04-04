@@ -86,79 +86,37 @@ pub struct Wallpaper<'a> {
     pub image: Option<Image<'a>>,
 }
 
-pub fn read_config(config_file: String) -> Config {
-    let config_data = std::fs::read_to_string(config_file).expect("Error reading config file");
-    serde_json::from_str(config_data.as_str()).unwrap()
-}
-
-pub fn write_config(config_file: String, config: Config) {
-    std::fs::write(config_file, serde_json::to_string(&config).expect("Error serializing config file")).expect("Error writing config file");
-}
-
-//pub fn start_wallpaper_process(config: Config) -> Child {
-//    let mut proc = Command::new("linux-wallpaperengine");
-//    if config.wallpaper_engine_assets.is_some() {
-//        proc.arg("--assets-dir").arg(config.wallpaper_engine_assets.as_ref().unwrap());
-//    }
-//    if config.no_fullscreen_pause {
-//        proc.arg("--no-fullscreen-pause");
-//    }
-//    if config.fps.is_some() {
-//        proc.arg("--fps").arg(&config.fps.unwrap().to_string());
-//    }
-//    if config.silent {
-//        proc.arg("--silent");
-//    }
-//    if config.no_audio_processing {
-//        proc.arg("--no-audio-processing");
-//    }
-//    for (mon, wp) in config.wallpapers.iter() {
-//        proc.arg("--screen-root").arg(mon).arg("--bg").arg(get_wallpaper_dir(Some(wp.id.clone())));
-//        proc.arg("--scaling").arg(format!("{:?}", wp.scaling).to_lowercase());
-//    }
-//    proc.arg("--clamp").arg(format!("{:?}", config.clamp).to_lowercase());
-//    println!("{:?}", proc.get_args());
-//    proc.spawn().expect("Failed to start wallpaper process.")
+//pub fn read_config(config_file: String) -> Config {
+//    let config_data = std::fs::read_to_string(config_file).expect("Error reading config file");
+//    serde_json::from_str(config_data.as_str()).unwrap()
 //}
-//pub fn kill_wallpaper() {
-//    Command::new("pkill").arg("-f").arg("linux-wallpaperengine").output().expect("Failed to kill wallpaper process.");
-//    //if wallpaper_process.is_some() {
-//    //    wallpaper_process.unwrap().kill().expect("Unable to kill child process.");
-//    //}
+
+//pub fn write_config(config_file: String, config: Config) {
+//    std::fs::write(config_file, serde_json::to_string(&config).expect("Error serializing config file")).expect("Error writing config file");
 //}
-//pub fn restart_wallpaper_service(service_type: ServiceType) -> std::io::Result<Output> {
-//    match service_type {
-//        ServiceType::Service => Command::new("systemctl").arg("--user").arg("restart").arg("wallpaper-engine.service").output(),
-//        ServiceType::None => {
-//            //Command::new("pkill").arg("-f").arg("linux-wallpaperengine").output().expect("Failed to kill wallpaper process.");
-//            //start_wallpaper_process(read_config(CONFIG_FILE.to_string()));
-//            panic!("Service only for now.")
-//        },
+
+//pub fn get_wallpaper_dir(wp_dir: Option<String>) -> String {
+//    if wp_dir.is_some() {
+//        format!("{0}/{1}/{2}/{3}", std::env::home_dir().expect("ERROR1").to_str().expect("ERROR2"), CONFIG_DIR, WALLPAPER_DIR, wp_dir.unwrap())
+//    }
+//    else {
+//        format!("{0}/{1}/{2}", std::env::home_dir().expect("ERROR1").to_str().expect("ERROR2"), CONFIG_DIR, WALLPAPER_DIR)
 //    }
 //}
 
-pub fn get_wallpaper_dir(wp_dir: Option<String>) -> String {
-    if wp_dir.is_some() {
-        format!("{0}/{1}/{2}/{3}", std::env::home_dir().expect("ERROR1").to_str().expect("ERROR2"), CONFIG_DIR, WALLPAPER_DIR, wp_dir.unwrap())
-    }
-    else {
-        format!("{0}/{1}/{2}", std::env::home_dir().expect("ERROR1").to_str().expect("ERROR2"), CONFIG_DIR, WALLPAPER_DIR)
-    }
-}
-
-pub fn get_wallpapers() -> Result<Vec<WallpaperInfo>, std::io::Error> {
-    let path = get_wallpaper_dir(None);
-    if (std::fs::exists(path.clone())).is_ok() {
-        std::fs::create_dir_all(path.clone()).expect("Unable to create wallpaper dir");
-    }
-    let paths = std::fs::read_dir(path)?;
-    let mut result: Vec<WallpaperInfo> = Vec::new();
-    for path in paths {
-        let path = path?.path();
-        result.push(WallpaperInfo::new(path)?);
-    }
-    Ok(result)
-}
+//pub fn get_wallpapers() -> Result<Vec<WallpaperInfo>, std::io::Error> {
+//    let path = get_wallpaper_dir(None);
+//    if (std::fs::exists(path.clone())).is_ok() {
+//        std::fs::create_dir_all(path.clone()).expect("Unable to create wallpaper dir");
+//    }
+//    let paths = std::fs::read_dir(path)?;
+//    let mut result: Vec<WallpaperInfo> = Vec::new();
+//    for path in paths {
+//        let path = path?.path();
+//        result.push(WallpaperInfo::new(path)?);
+//    }
+//    Ok(result)
+//}
 
 pub fn get_wallpaper_preview(wallpaper_dir: String) -> Result<String, std::io::Error> {
     let paths = std::fs::read_dir(wallpaper_dir);
