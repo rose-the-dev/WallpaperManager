@@ -5,84 +5,86 @@ use serde::{Deserialize, Serialize};
 use wallpaper_common::{CONFIG_DIR, WALLPAPER_DIR};
 
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Config {
-    /// Whether to auto start wallpaperengine.
-    //pub auto_start: bool,
-    pub debugging: bool,
-    /// Icon size
-    pub icon_size: f32,
-    pub silent: bool,
-    pub no_audio_processing: bool,
-    pub no_fullscreen_pause: bool,
-    pub fps: Option<u16>,
-    pub clamp: Clamp,
-    pub wallpapers: HashMap<String, ScreenInfo>,
-    pub wallpaper_engine_assets: Option<PathBuf>,
-}
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            //auto_start: false,
-            debugging: false,
-            icon_size: 200.0,
-            silent: false,
-            no_audio_processing: false,
-            no_fullscreen_pause: false,
-            fps: None,
-            clamp: Clamp::Clamp,
-            wallpapers: HashMap::new(),
-            wallpaper_engine_assets: None,
-        }
-    }
-}
+//#[derive(Serialize, Deserialize, Clone)]
+//pub struct Config {
+//    /// Whether to auto start wallpaperengine.
+//    //pub auto_start: bool,
+//    pub debugging: bool,
+//    /// Icon size
+//    pub icon_size: f32,
+//    pub silent: bool,
+//    pub no_audio_processing: bool,
+//    pub no_fullscreen_pause: bool,
+//    pub fps: Option<u16>,
+//    pub clamp: Clamp,
+//    pub wallpapers: HashMap<String, ScreenInfo>,
+//    pub wallpaper_engine_assets: Option<PathBuf>,
+//}
+//impl Default for Config {
+//    fn default() -> Self {
+//        Self {
+//            //auto_start: false,
+//            debugging: false,
+//            icon_size: 200.0,
+//            silent: false,
+//            no_audio_processing: false,
+//            no_fullscreen_pause: false,
+//            fps: None,
+//            clamp: Clamp::Clamp,
+//            wallpapers: HashMap::new(),
+//            wallpaper_engine_assets: None,
+//        }
+//    }
+//}
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct ScreenInfo {
-    pub id: String,
-    pub scaling: Scaling,
-}
 
-#[derive(Clone)]
-pub struct WallpaperInfo {
-    /// Id of wallpaper (directory without full path of other files)
-    pub id: String,
-    /// Full path of wallpaper files with id.
-    pub full_path: PathBuf,
-    /// Full path to preview file.
-    pub preview_file: String,
-    pub project_file: String,
-}
 
-impl WallpaperInfo {
-    pub fn new(path: PathBuf) -> Result<Self, std::io::Error> {
-        let id = path.as_path().file_name().unwrap().to_str().unwrap().to_owned();
-        let paths = std::fs::read_dir(Path::new(path.as_path()))?;
-        for path2 in paths {
-            let path2 = path2?.path();
-            let name = path2.as_path().file_stem().unwrap();
-            if name == "preview" {
-                return Ok(Self {
-                    id: id.clone(),
-                    full_path: path.clone(),
-                    preview_file: path2.as_path().to_str().unwrap().to_owned(),
-                    project_file: format!("{}/{}", path.as_path().to_str().unwrap(), "project.json"),
-                });
-            }
-        }
-        Err(std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"))
-    }
-}
+//#[derive(Clone)]
+//pub struct WallpaperInfo {
+//    /// Id of wallpaper (directory without full path of other files)
+//    pub id: String,
+//    /// Full path of wallpaper files with id.
+//    pub full_path: PathBuf,
+//    /// Full path to preview file.
+//    pub preview_file: String,
+//    pub project_file: String,
+//}
 
-#[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
-pub enum Clamp { Clamp, Border, Repeat }
+//impl WallpaperInfo {
+//    pub fn new(path: PathBuf) -> Result<Self, std::io::Error> {
+//        let id = path.as_path().file_name().unwrap().to_str().unwrap().to_owned();
+//        let paths = std::fs::read_dir(Path::new(path.as_path()))?;
+//        for path2 in paths {
+//            let path2 = path2?.path();
+//            let name = path2.as_path().file_stem().unwrap();
+//            if name == "preview" {
+//                return Ok(Self {
+//                    id: id.clone(),
+//                    full_path: path.clone(),
+//                    preview_file: path2.as_path().to_str().unwrap().to_owned(),
+//                    project_file: format!("{}/{}", path.as_path().to_str().unwrap(), "project.json"),
+//                });
+//            }
+//        }
+//        Err(std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"))
+//    }
+//}
 
-#[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
-pub enum Scaling { Stretch, Fit, Fill, Default }
+//#[derive(Serialize, Deserialize, Clone)]
+//pub struct ScreenInfo {
+//    pub id: String,
+//    pub scaling: Scaling,
+//}
+
+//#[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
+//pub enum Clamp { Clamp, Border, Repeat }
+
+//#[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
+//pub enum Scaling { Stretch, Fit, Fill, Default }
 
 #[derive(Clone)]
 pub struct Wallpaper<'a> {
-    pub wallpaper_info: WallpaperInfo,
+    pub wallpaper_info: wallpaper_common::wallpaper::WallpaperInfo,
     pub image: Option<Image<'a>>,
 }
 
@@ -118,19 +120,19 @@ pub struct Wallpaper<'a> {
 //    Ok(result)
 //}
 
-pub fn get_wallpaper_preview(wallpaper_dir: String) -> Result<String, std::io::Error> {
-    let paths = std::fs::read_dir(wallpaper_dir);
-    if paths.is_ok() {
-        for path2 in paths? {
-            let path2 = path2?.path();
-            let name = path2.as_path().file_stem().unwrap();
-            if name == "preview" {
-                return Ok(path2.as_path().to_str().unwrap().to_owned());
-            }
-        }
-        Err(std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"))
-    }
-    else {
-        Err(std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"))
-    }
-}
+//pub fn get_wallpaper_preview(wallpaper_dir: String) -> Result<String, std::io::Error> {
+//    let paths = std::fs::read_dir(wallpaper_dir);
+//    if paths.is_ok() {
+//        for path2 in paths? {
+//            let path2 = path2?.path();
+//            let name = path2.as_path().file_stem().unwrap();
+//            if name == "preview" {
+//                return Ok(path2.as_path().to_str().unwrap().to_owned());
+//            }
+//        }
+//        Err(std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"))
+//    }
+//    else {
+//        Err(std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"))
+//    }
+//}

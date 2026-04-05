@@ -1,9 +1,9 @@
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mut help: bool = args.contains(&"-h".to_string()) | args.contains(&"--help".to_string());
-    let dry_run: bool = args.contains(&"-d".to_string()) | args.contains(&"--dry-run".to_string());
+    let _dry_run: bool = args.contains(&"-d".to_string()) | args.contains(&"--dry-run".to_string());
     let version: bool = args.contains(&"-v".to_string()) | args.contains(&"--version".to_string());
-    let save: bool = args.contains(&"-s".to_string()) | args.contains(&"--save".to_string());
+    let _save: bool = args.contains(&"-s".to_string()) | args.contains(&"--save".to_string());
 
     if args.len() == 1 {
         println!("No commands specified.\n");

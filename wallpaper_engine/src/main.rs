@@ -1,21 +1,16 @@
 mod extra;
 
-use wallpaper_common::{CONFIG_DIR, WALLPAPER_DIR};
 use cairo::{Context, Format, ImageSurface, IoError, SurfacePattern};
 use smithay_client_toolkit::{
-                             delegate_compositor, delegate_layer, delegate_output, delegate_pointer, delegate_registry, delegate_seat, delegate_shm, registry_handlers,
                              compositor::{CompositorHandler, CompositorState},
-                             output::{OutputHandler, OutputData, OutputState},
-                             registry::{ProvidesRegistryState, RegistryState},
-                             seat::{
-                                 pointer::{PointerEvent, PointerEventKind, PointerHandler},
-                                 Capability, SeatHandler, SeatState,
-                             },
+                             output::OutputState,
+                             registry::RegistryState,
+                             seat::SeatState,
                              shell::{
-                                 wlr_layer::{Anchor, KeyboardInteractivity, Layer, LayerShell, LayerShellHandler, LayerSurface, LayerSurfaceConfigure},
+                                 wlr_layer::LayerShell,
                                  WaylandSurface,
                              },
-                             shm::{slot::SlotPool, Shm, ShmHandler},
+                             shm::Shm,
                              reexports::calloop::{EventLoop, Interest, Mode}
 };
 use wayland_client::{
@@ -28,7 +23,7 @@ use std::borrow::Borrow;
 use std::time::Duration;
 use std::collections::{HashMap};
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::net::Shutdown;
 use std::os::unix::net::UnixListener;
 use smithay_client_toolkit::reexports::calloop::PostAction;
@@ -86,8 +81,7 @@ fn main() {
     sub_queue_handle.insert_source(smithay_client_toolkit::reexports::calloop::generic::Generic::new(sock, Interest::READ, Mode::Edge), |event, metadata, shared_data| {
         if event.readable {
             let (mut stream, _addr) = metadata.accept().unwrap();
-            let mut reader = wallpaper_common::SocketReader::new(255);
-            let recv = reader.read_socket(&mut stream);
+            let recv = wallpaper_common::read_socket(&mut stream);
             if recv.is_some() {
                 let recv = recv.as_ref().unwrap().split(":").collect::<Vec<&str>>();
                 let command = *recv.first().unwrap();
@@ -132,6 +126,9 @@ fn main() {
                     "option" => {
                         ;
                     }
+                    "save" => { // Probably could implement all the config stuff in engine exclusively, instead of having that done in multiple areas.
+
+                    }
                     _ => {
                         println!("Read {}, {:?}.", command, args);
                         stream.write(b"Not recognised.").unwrap_or(0);
@@ -158,7 +155,7 @@ fn main() {
 
 
 fn set_wallpaper_internal(layer: &mut LayerData, wallpaper_id: String) {
-    let long_name = format!("{}/{}", get_wallpaper_dir(Some(wallpaper_id.clone())), ""); // TODO: Make functional wallpaper json reader and image stuff
+    let long_name = format!("{}/{}", wallpaper_common::wallpaper::get_wallpaper_dir(Some(wallpaper_id.clone())), ""); // TODO: Make functional wallpaper json reader and image stuff
     let image_surface = get_image(long_name).unwrap();
     layer.wallpaper = Some((wallpaper_id, image_surface));
 }

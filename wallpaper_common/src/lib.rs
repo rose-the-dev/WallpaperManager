@@ -74,81 +74,112 @@ pub fn read_socket(sock: &mut UnixStream) -> Option<String> {
     None
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ScreenInfo {
+    pub id: String,
+    pub scaling: Scaling,
+}
 
+#[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
+pub enum Clamp { Clamp, Border, Repeat }
+
+#[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
+pub enum Scaling { Stretch, Fit, Fill, Default }
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
-    /// All config values without monitors.
-    values: HashMap<String, String>,
-    /// All monitor entries
-    monitors: HashMap<String, String>,
+    /// Whether to auto start wallpaperengine.
+    pub debugging: bool,
+    /// Icon size
+    pub icon_size: f32,
+    pub silent: bool,
+    pub no_audio_processing: bool,
+    pub no_fullscreen_pause: bool,
+    pub fps: Option<u16>,
+    pub clamp: Clamp,
+    pub wallpapers: HashMap<String, Option<ScreenInfo>>,
 }
 impl Config {
-    pub fn from_file(file: &str) -> Result<Config, std::io::Error> {
-        let mut buf = String::new();
-        let mut file = std::fs::File::open(file)?;
-        let res = file.read_to_string(&mut buf);
-        match res {
-            Ok(data) => {
-                let mut s = Self {
-                    values: HashMap::new(),
-                    monitors: HashMap::new(),
-                };
-                let mut line = 0;
-                for val in buf.lines() {
-                    if val.starts_with("#") { // Comment
-                        continue;
-                    }
-                    let val = val.to_lowercase();
-                    let split: Vec<&str> = val.split(":").collect();
-                    if split[0] == "monitor" {
-                        if split.len() != 3 {
-                            return Err(std::io::Error::new(ErrorKind::Other, format!("Invalid monitor config at line {}", line)));
-                        }
-                        s.monitors.insert(split[1].to_string(), split[2].to_string());
-                    }
-                    else {
-                        s.values.insert(split[0].to_string(), split[1].to_string());
-                    }
-                    line += 1;
-                }
-                Ok(s)
-            }
-            Err(e) => {
-                Err(e)
-            }
+    pub fn empty() -> Self {
+        Self {
+            //auto_start: false,
+            debugging: false,
+            icon_size: 200.0,
+            silent: false,
+            no_audio_processing: false,
+            no_fullscreen_pause: false,
+            fps: None,
+            clamp: Clamp::Clamp,
+            wallpapers: HashMap::new(),
         }
     }
 
-    pub fn save(&self, file: &str) -> Result<(), std::io::Error> {
-        let mut file = std::fs::File::open(file)?;
-        for (key, value) in &self.values {
-            file.write(format!("{}:{}\n", key, value).as_bytes())?;
-        }
-        for (key, value) in &self.monitors {
-            file.write(format!("monitor:{}:{}\n", key, value).as_bytes())?;
-        }
-        Ok(())
+    pub fn from_file(file: String) -> serde_json::error::Result<Config> {
+        let config_data = std::fs::read_to_string(file).expect("Error reading config file");
+        serde_json::from_str(config_data.as_str())
+    }
+
+    pub fn save(&self, file: String) -> Result<(), std::io::Error> {
+        std::fs::write(file, serde_json::to_string(self).expect("Error serializing config file"))
     }
 }
 
-fn get_wallpaper_dir(wp_dir: Option<String>) -> String {
-    if wp_dir.is_some() {
-        format!("{0}/{1}/{2}/{3}", std::env::home_dir().expect("ERROR1").to_str().expect("ERROR2"), CONFIG_DIR, WALLPAPER_DIR, wp_dir.unwrap())
-    }
-    else {
-        format!("{0}/{1}/{2}", std::env::home_dir().expect("ERROR1").to_str().expect("ERROR2"), CONFIG_DIR, WALLPAPER_DIR)
-    }
-}
-
-pub fn get_wallpapers() -> Result<Vec<wallpaper::WallpaperInfo>, std::io::Error> {
-    let path = get_wallpaper_dir(None);
-    if (std::fs::exists(path.clone())).is_ok() {
-        std::fs::create_dir_all(path.clone()).expect("Unable to create wallpaper dir");
-    }
-    let paths = std::fs::read_dir(path)?;
-    let mut result: Vec<wallpaper::WallpaperInfo> = Vec::new();
-    for path in paths {
-        let path = path?.path();
-        result.push(wallpaper::WallpaperInfo::from_path(path)?);
-    }
-    Ok(result)
-}
+//pub struct Config {
+//    /// All config values without monitors.
+//    values: HashMap<String, String>,
+//    /// All monitor entries
+//    monitors: HashMap<String, String>,
+//}
+//impl Config {
+//    pub fn empty() -> Self {
+//        Self {
+//            values: HashMap::new(),
+//            monitors: HashMap::new(),
+//        }
+//    }
+//    pub fn from_file(file: String) -> Result<Config, std::io::Error> {
+//        let mut buf = String::new();
+//        let mut file = std::fs::File::open(file)?;
+//        let res = file.read_to_string(&mut buf);
+//        match res {
+//            Ok(_data) => {
+//                let mut s = Self {
+//                    values: HashMap::new(),
+//                    monitors: HashMap::new(),
+//                };
+//                let mut line = 0;
+//                for val in buf.lines() {
+//                    if val.starts_with("#") { // Comment
+//                        continue;
+//                    }
+//                    let val = val.to_lowercase();
+//                    let split: Vec<&str> = val.split(":").collect();
+//                    if split[0] == "monitor" {
+//                        if split.len() != 3 {
+//                            return Err(std::io::Error::new(ErrorKind::Other, format!("Invalid monitor config at line {}", line)));
+//                        }
+//                        s.monitors.insert(split[1].to_string(), split[2].to_string());
+//                    }
+//                    else {
+//                        s.values.insert(split[0].to_string(), split[1].to_string());
+//                    }
+//                    line += 1;
+//                }
+//                Ok(s)
+//            }
+//            Err(e) => {
+//                Err(e)
+//            }
+//        }
+//    }
+//    pub fn save(&self, file: String) -> Result<(), std::io::Error> {
+//        let mut file = std::fs::File::open(file)?;
+//        for (key, value) in &self.values {
+//            file.write(format!("{}:{}\n", key, value).as_bytes())?;
+//        }
+//        for (key, value) in &self.monitors {
+//            file.write(format!("monitor:{}:{}\n", key, value).as_bytes())?;
+//        }
+//        Ok(())
+//    }
+//}

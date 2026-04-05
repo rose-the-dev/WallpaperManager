@@ -1,4 +1,4 @@
-use cairo::{Context, Format, ImageSurface, SurfacePattern};
+use cairo::ImageSurface;
 use smithay_client_toolkit::{
     delegate_compositor, delegate_layer, delegate_output, delegate_pointer, delegate_registry, delegate_seat, delegate_shm, registry_handlers,
     compositor::{CompositorHandler, CompositorState},
@@ -22,7 +22,6 @@ use wayland_client::{
     protocol::wl_output::WlOutput
 };
 use std::collections::HashMap;
-use wayland_client::protocol::wl_shm;
 
 pub struct LayerData {
     pub wl_output: WlOutput,
