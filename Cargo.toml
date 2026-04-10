@@ -13,9 +13,9 @@ path = "wallpaper_engine/src/main.rs"
 name = "wallpaper-ctl"
 path = "wallpaper_ctl/src/main.rs"
 
-##[[bin]]
-##name = "wallpaper-manager"
-##path = "wallpaper_manager/src/main.rs"
+[[bin]]
+name = "wallpaper-manager"
+path = "wallpaper_manager/src/main.rs"
 
 [lib]
 name = "wallpaper_common"

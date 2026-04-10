@@ -22,7 +22,7 @@ impl Ipc {
             return Err(stream.unwrap_err());
         }
         Ok(Self {
-            buffer: Vec::new(),
+            buffer: vec![0; 1024],
             stream: stream?,
         })
     }
@@ -65,11 +65,11 @@ impl Ipc {
 }
 
 pub fn read_socket(sock: &mut UnixStream) -> Option<String> {
-    let mut out = vec![0; 255];
-    let y = sock.read(out.as_mut_slice()).unwrap();
+    let mut out: [u8; 255] = [0; 255];
+    let y = sock.read(out.as_mut()).unwrap();
     println!("{}", y);
     if y != 0 {
-        return Some(String::from_utf8(out).unwrap());
+        return Some(String::from_utf8(out.to_vec()).unwrap());
     }
     None
 }
@@ -103,7 +103,7 @@ impl Config {
     pub fn empty() -> Self {
         Self {
             //auto_start: false,
-            debugging: false,
+            debugging: true,
             icon_size: 200.0,
             silent: false,
             no_audio_processing: false,

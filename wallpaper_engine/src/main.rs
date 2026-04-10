@@ -86,7 +86,7 @@ fn main() {
                 let recv = recv.as_ref().unwrap().split(":").collect::<Vec<&str>>();
                 let command = *recv.first().unwrap();
                 let args = recv.last().unwrap().split(",").collect::<Vec<&str>>();
-
+                println!("command {}", command);
                 match command {
                     "set" => {
                         println!("{}", args[0]);
@@ -124,7 +124,8 @@ fn main() {
                     //"list-wallpapers" => {
                     //}
                     "option" => {
-                        ;
+                        println!("Recv: {}, {}", args[0], args[1]);
+                        stream.write(b"Not-implemented").unwrap_or(0);
                     }
                     "save" => { // Probably could implement all the config stuff in engine exclusively, instead of having that done in multiple areas.
 

@@ -52,6 +52,11 @@ fn main() {
                     let res = ipc.send_list_wallpapers().unwrap();
                     println!("{}", res);
                 }
+                "option" => {
+                    ensure_parameters(&args, 2);
+                    let res = ipc.send_option(args.get(2).unwrap().to_string(), args.get(3).unwrap().to_string()).unwrap();
+                    println!("{}", res);
+                }
                 "restart" => {
                     ensure_parameters(&args, 0);
                     // TODO: Consider other method of "restarting" service, like a non systemd dependent version if needed.

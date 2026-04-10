@@ -3,7 +3,7 @@ mod common;
 use std::cmp::PartialEq;
 use crate::common::*;
 use wallpaper_common::{CONFIG_FILE, CONFIG_DIR, Clamp, Config, Scaling, ScreenInfo};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::ops::RangeInclusive;
 //use std::process::{Child, Command};
 use display_info::DisplayInfo;
@@ -35,6 +35,7 @@ fn main() {
 }
 
 struct MainWindow<'a> {
+    frames: u64,
     config: wallpaper_common::Config,
     wallpaper: Option<wallpaper_common::wallpaper::WallpaperInfo>,
     //wallpapers: HashMap<String, Wallpaper<'a>>,
@@ -43,6 +44,7 @@ struct MainWindow<'a> {
     //wallpaper_process: Option<Child>,
     /// The current selected screen to set wallpaper.
     select_current_screen: Option<String>,
+    animations: Vec<(AnimData, String)>,
 
     subpage: Subpage,
 }
@@ -55,16 +57,9 @@ impl Default for MainWindow<'static> {
         let binding = std::env::home_dir().unwrap();
         let config_dir = format!("{0}/{1}", binding.to_str().unwrap(), CONFIG_DIR);
         let config_file = format!("{0}/{1}", config_dir, CONFIG_FILE);
-        if std::fs::exists(config_dir.clone()).is_ok_and(|x| x == false) {
+        if std::fs::exists(config_dir.clone()).unwrap() == false {
             std::fs::create_dir(config_dir).expect("Unable to create config dir");
         }
-        //if std::fs::exists(config_file.clone()).is_ok_and(|x| x == false) {
-        //    let conf = wallpaper_common::Config::empty();
-        //    conf.save(config_file.clone()).unwrap();
-        //    //write_config(config_file.clone(), conf);
-        //}
-
-        //let config = read_config(config_file.clone());
         let display_info = DisplayInfo::all().unwrap();
         let mut config: Config;
         let res = Config::from_file(config_file);
@@ -86,8 +81,7 @@ impl Default for MainWindow<'static> {
         for info in display_info.iter() {
             if !config.wallpapers.iter().any(|x| x.0.clone() == info.name) {
                 screens.push(info.name.clone());
-                screens.push(info.name.clone());
-
+                //screens.push(info.name.clone());
             }
         }
         for screen in screens.iter() {
@@ -108,18 +102,45 @@ impl Default for MainWindow<'static> {
         let default_preview_image = Image::new(include_image!("assets/UnknownImage.png"));
 
         let mut x = Self {
+            frames: 0,
             config,
             wallpaper: None,
             wallpapers: BTreeMap::new(),
             default_preview_image,
-            //wallpaper_process,
-            //select_current_screen: Some(DisplayInfo::all().unwrap()[0].name.clone()),
             select_current_screen: None,
+            animations: Vec::new(),
 
             subpage: Subpage::None,
         };
         x.load_all_wallpapers();
         x
+    }
+}
+
+struct AnimData {
+    /// The frames that the animation starts at.
+    start: u64,
+    /// Defines the frames for the fade in animation.
+    start_frames: u64,
+    /// Defines the frames between end of fade in and start of fade out.
+    end: u64,
+    /// Defines the frames for the fade out animation.
+    end_frames: u64,
+}
+
+impl AnimData {
+    /// time is the number of frames after start.
+    fn with_default_frames(start: u64, time: u64) -> Self {
+        Self {
+            start,
+            start_frames: 5,
+            end: time,
+            end_frames: 30,
+        }
+    }
+
+    fn has_reached_end(&self, current_frames: u64) -> bool {
+        self.start + self.start_frames + self.end + self.end_frames <= current_frames
     }
 }
 
@@ -129,13 +150,12 @@ impl MainWindow<'static> {
         let wps = wallpaper_common::wallpaper::get_wallpapers().unwrap(); // TODO: FIX THIS, THIS THROWS ERRORS WHEN ADDING WALLPAPERS
         for wp in wps {
             if !self.wallpapers.contains_key(&wp.id) {
-                self.wallpapers.insert(wp.id.clone(), Wallpaper { wallpaper_info: wp.clone(), image: Some(Image::new(format!("file://{0}", wp.data.preview.clone()))) });
+                self.wallpapers.insert(wp.id.clone(), Wallpaper { wallpaper_info: wp.clone(), image: Some(Image::new(format!("file://{}/{}", wp.full_path.to_str().unwrap(), wp.data.preview.clone()))) });
                 return true;
-            }
-            else {
+            } else {
                 let x = self.wallpapers.get_mut(&wp.id).unwrap();
                 if x.image.is_none() {
-                    x.image =Some(Image::new(format!("file://{0}", wp.data.preview.clone())));
+                    x.image = Some(Image::new(format!("file://{}/{}", wp.full_path.to_str().unwrap(), wp.data.preview.clone())));
                     return true;
                 }
             }
@@ -155,24 +175,14 @@ impl MainWindow<'static> {
         used
     }
 
-    fn set_screen_wallpaper(&mut self, screen: String, wallpaper_id: String) {
-        //if self.config.wallpapers.contains_key(&screen) {
-        //    self.config.wallpapers.get_mut(&screen).unwrap().id = wallpaper_id.clone();
-        //}
-        //else {
-        //    self.config.wallpapers.insert(screen.clone(), ScreenInfo { id: wallpaper_id.clone(), scaling: Scaling::Default });
-        //}
-
-        let _config_file = format!("{0}/{1}/{2}", std::env::home_dir().unwrap().to_str().unwrap(), CONFIG_DIR, CONFIG_FILE);
-        //write_config(config_file, self.config.clone());
-        //restart_wallpaper_service(ServiceType::Service).expect("Unable to restart service.");
-        // TODO: Implement IPC to configure wallpaper-engine 2.
+    fn set_screen_wallpaper(&mut self, screen: String, wallpaper_id: String) -> Result<(), std::io::Error> {
         let ipc = wallpaper_common::Ipc::connect();
         match ipc {
             Ok(mut ipc) => {
-                ipc.send_change_wallpaper(screen, wallpaper_id).unwrap();
+                ipc.send_change_wallpaper(screen, wallpaper_id)?;
+                Ok(())
             }
-            Err(e) => {}
+            Err(e) => {Err(e)}
         }
     }
 
@@ -190,7 +200,15 @@ impl MainWindow<'static> {
             .corner_radius(8.0)
             .inner_margin(egui::Margin::same(12))
     }
+    fn floating_bg_alpha(alpha: u8) -> egui::Frame {
+        egui::Frame::default()
+            .fill(egui::Color32::from_rgba_unmultiplied(30, 30, 45, alpha))
+            .stroke(egui::Stroke::new(1.0, egui::Color32::LIGHT_GRAY))
+            .corner_radius(8.0)
+            .inner_margin(egui::Margin::same(12))
+    }
 
+    /// Ironic name because this is for detecting clicks outside the floating menus.
     fn floating_clicked(pointer: egui::PointerState, area: egui::Response) -> bool {
         if pointer.primary_clicked() {
             if let Some(pos) = pointer.interact_pos() {
@@ -201,10 +219,25 @@ impl MainWindow<'static> {
         }
         return false;
     }
+
+
+    fn check_banners_open(&mut self) -> bool {
+        for (anim, text) in self.animations.iter_mut() {
+            anim.has_reached_end(self.frames);
+        }
+
+
+        self.animations.len() > 0
+    }
+
+    fn push_banner(&mut self, text: String, anim: AnimData) {
+        self.animations.push((anim, text));
+    }
 }
 
 impl eframe::App for MainWindow<'static> {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.frames += 1;
         let _content = ctx.content_rect();
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
@@ -248,29 +281,40 @@ impl eframe::App for MainWindow<'static> {
             .anchor(Align2::RIGHT_BOTTOM, [-40.0, -40.0])
             .show(ctx, |ui| {
             if ui.add(egui::Button::new("Save config").corner_radius(5).min_size([100.0, 35.0].into())).clicked() {
-                // TODO: Save config button.
-                println!("Save config");
+                let config = format!("{}/{}/{}", std::env::home_dir().unwrap().to_str().unwrap(), CONFIG_DIR, CONFIG_FILE);
+                self.config.save(config).unwrap();
             };
         });
 
         let mut side_width: f32 = 0.0;
         if self.select_current_screen.is_some() {
             side_width = egui::SidePanel::right("side_panel").resizable(false).show(ctx, |ui| {
-                //let mut ipc = wallpaper_common::Ipc::connect().expect("Couldn't connect to wallpaper-engine.");
                 let mut image = self.default_preview_image.clone().fit_to_exact_size(Vec2::new(250.0, 250.0));
                 if self.wallpaper.is_some() {
-                    image = Image::new(format!("file://{}", self.wallpaper.as_ref().unwrap().data.preview)).fit_to_exact_size(Vec2::new(250.0, 250.0));
+                    image = Image::new(format!("file://{}/{}", self.wallpaper.as_ref().unwrap().full_path.to_str().unwrap(), self.wallpaper.as_ref().unwrap().data.preview)).fit_to_exact_size(Vec2::new(250.0, 250.0));
                 }
                 ui.add(image);
                 if self.wallpaper.is_some() {
                     ui.label(self.wallpaper.as_ref().unwrap().id.clone());
                 }
-
+                let ipc = wallpaper_common::Ipc::connect();
+                let ipc_connected = ipc.is_ok();
                 let mut fps_clicked = self.config.fps.is_some();
-                let mut update = ui.checkbox(&mut self.config.silent, "Silent").changed();
-                update = update | ui.checkbox(&mut self.config.no_audio_processing, "No audio processing").changed();
+                let update = ui.checkbox(&mut self.config.silent, "Silent").changed();
+                if update && ipc_connected {
+                    let mut ipc = ipc.unwrap();
+                    ipc.send_option("silent".to_string(), format!("{}", self.config.silent)).unwrap();
+                    return;
+                }
+
+                let update = ui.checkbox(&mut self.config.no_audio_processing, "No audio processing").changed();
+                if update && ipc_connected {
+                    let mut ipc = ipc.unwrap();
+                    ipc.send_option("audio_processing".to_string(), format!("{}", self.config.no_audio_processing)).unwrap();
+                    return;
+                }
+
                 let fps_changed = ui.checkbox(&mut fps_clicked, "FPS").changed();
-                update = update | fps_changed;
                 if fps_changed {
                     if fps_clicked {
                         self.config.fps = Some(30);
@@ -278,41 +322,55 @@ impl eframe::App for MainWindow<'static> {
                     else {
                         self.config.fps = None;
                     }
+                    if ipc_connected {
+                        let mut ipc = ipc.unwrap();
+                        ipc.send_option("fps-enabled".to_string(), format!("{}", self.config.fps.is_some())).unwrap();
+                        return;
+                    }
                 }
                 if fps_clicked {
-                    update = update | ui.add(egui::Slider::new(self.config.fps.as_mut().unwrap(), RangeInclusive::new(1, 100))).changed();
+                    let update = ui.add(egui::Slider::new(self.config.fps.as_mut().unwrap(), 5..=100)).changed();
+                    if update && ipc_connected {
+                        let mut ipc = ipc.unwrap();
+                        ipc.send_option("fps".to_string(), format!("{:?}", self.config.fps)).unwrap();
+                        return;
+                    }
                 }
                 let text = self.config.clamp.clone();
-                update = update | ComboBox::from_label("Clamp").selected_text(format!("{:?}", text)).show_ui(ui, |ui| {
+                let update = ComboBox::from_label("Clamp").selected_text(format!("{:?}", text)).show_ui(ui, |ui| {
                     let mut up = ui.selectable_value(&mut self.config.clamp, Clamp::Clamp, "Clamp").changed();
                     up = up | ui.selectable_value(&mut self.config.clamp, Clamp::Border, "Border").changed();
                     up = up | ui.selectable_value(&mut self.config.clamp, Clamp::Repeat, "Repeat").changed();
                     up
                 }).inner.unwrap_or(false);
+                if update && ipc_connected {
+                    let mut ipc = ipc.unwrap();
+                    ipc.send_option("clamp".to_string(), format!("{:?}", self.config.clamp)).unwrap();
+                    return;
+                }
 
-                //let text = self.config.wallpapers[self.select_current_screen.clone().unwrap().as_str()].as_ref().unwrap().scaling.clone();
-                let text = Scaling::Default;
-                update = update | ComboBox::from_label("Scaling").selected_text(format!("{:?}", text)).show_ui(ui, |ui| {
+                let text = self.config.wallpapers[self.select_current_screen.clone().unwrap().as_str()].as_ref().unwrap().scaling.clone();
+                let update = ComboBox::from_label("Scaling").selected_text(format!("{:?}", text)).show_ui(ui, |ui| {
                     let mut x = self.config.wallpapers.get_mut(self.select_current_screen.clone().unwrap().as_str());
-                    let mut val = x.as_mut().unwrap().as_mut().unwrap();
+                    let val = x.as_mut().unwrap().as_mut().unwrap();
                     let mut up = ui.selectable_value(&mut val.scaling, Scaling::Default, "Default").changed();
                     up = up | ui.selectable_value(&mut val.scaling, Scaling::Fit, "Fit").changed();
                     up = up | ui.selectable_value(&mut val.scaling, Scaling::Fill, "Fill").changed();
                     up = up | ui.selectable_value(&mut val.scaling, Scaling::Stretch, "Stretch").changed();
                     up
                 }).inner.unwrap_or(false);
-
-                update = update | ui.checkbox(&mut self.config.no_fullscreen_pause, "No fullscreen pause").changed();
-
-                if update {
-                    // TODO: Implement IPC to configure wallpaper-engine.
-
-                    //ipc.send_option("fps".to_string(), "").unwrap();
+                if update && ipc_connected {
+                    let mut ipc = ipc.unwrap();
+                    ipc.send_option("scaling".to_string(), format!("{},{:?}", self.select_current_screen.clone().unwrap(), self.config.wallpapers[self.select_current_screen.clone().unwrap().as_str()].as_ref().unwrap().scaling.clone())).unwrap();
+                    return;
                 }
-                ui.add_space(30.0);
-                ui.separator();
 
-                ui.checkbox(&mut true, "Show Steam Wallpaper engine items");
+                let update = ui.checkbox(&mut self.config.no_fullscreen_pause, "No fullscreen pause").changed();
+                if update && ipc_connected {
+                    let mut ipc = ipc.unwrap();
+                    ipc.send_option("fullscreen_pause".to_string(), format!("{}", self.config.no_fullscreen_pause)).unwrap();
+                    return;
+                }
             }).response.rect.width();
         }
         else {
@@ -322,6 +380,20 @@ impl eframe::App for MainWindow<'static> {
                 .show(ctx, |ui| {});
         }
 
+
+        let mut c: i32 = 0;
+        for (anim, text) in self.animations.iter() {
+            egui::Area::new("warning_area".into())
+                .movable(false)
+                .anchor(Align2::CENTER_BOTTOM, [0.0, -((50.0 * c as f32) + 50.0)])
+                .show(ctx, |ui| {
+                    let bg = Self::floating_bg_alpha(255);
+                    bg.show(ui, |ui| {
+                        ui.add(egui::Label::new(text));
+                    });
+                });
+            c += 1;
+        }
 
 
         let area: Option<InnerResponse<()>> = match self.subpage {
@@ -416,7 +488,10 @@ impl eframe::App for MainWindow<'static> {
                                     println!("Wallpaper {} clicked.", id.clone());
                                 }
                                 self.wallpaper = Some(wallpaper.wallpaper_info.clone());
-                                self.set_screen_wallpaper(self.select_current_screen.clone().unwrap(), id.clone());
+                                let x = self.set_screen_wallpaper(self.select_current_screen.clone().unwrap(), id.clone());
+                                if x.is_err() {
+                                    self.push_banner("Error".to_string(), AnimData::with_default_frames(self.frames, 40))
+                                }
                             }
                             image_box.context_menu(|ui| {
                                 if ui.button("Delete").clicked() {
