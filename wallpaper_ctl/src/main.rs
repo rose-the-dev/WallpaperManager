@@ -22,13 +22,13 @@ fn main() {
             println!("  -{:?}", x.unwrap().stdout);
         }
         else {
-            println!("  -Version info not found.");
+            println!("  -wallpaper-engine not installed or could not be found.");
         }
         if y.is_ok() {
             println!("  -{:?}", y.unwrap().stdout);
         }
         else {
-            println!("  -Version info not found.");
+            println!("  -wallpaper-manager not installed or could not be found.");
         }
         return;
     }
