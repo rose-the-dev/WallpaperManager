@@ -1,3 +1,5 @@
+use wallpaper_common::Ipc;
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mut help: bool = args.contains(&"-h".to_string()) | args.contains(&"--help".to_string());
@@ -33,7 +35,7 @@ fn main() {
         return;
     }
 
-    let ipc = wallpaper_common::Ipc::connect();
+    let ipc = Ipc::connect();
     match ipc {
         Ok(mut ipc) => {
             match args[1].to_lowercase().as_str() {

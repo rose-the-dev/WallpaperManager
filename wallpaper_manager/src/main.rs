@@ -4,8 +4,6 @@ use std::cmp::PartialEq;
 use crate::common::*;
 use wallpaper_common::{CONFIG_FILE, CONFIG_DIR, Clamp, Config, Scaling, ScreenInfo};
 use std::collections::{BTreeMap, VecDeque};
-use std::ops::RangeInclusive;
-//use std::process::{Child, Command};
 use display_info::DisplayInfo;
 use eframe::{egui};
 use eframe::egui::{include_image, Align2, ComboBox, Image, InnerResponse, Vec2};
@@ -19,7 +17,6 @@ fn main() {
         return;
     }
     env_logger::init();
-    //Command::new("pkill").arg("-f").arg("linux-wallpaperengine").output().expect("Failed to kill wallpaper process.");
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_app_id("wallpaper-manager").with_min_inner_size([400.0, 300.0]).with_inner_size([800.0, 500.0]),
         ..Default::default()
@@ -37,11 +34,9 @@ fn main() {
 struct MainWindow<'a> {
     frames: u64,
     config: wallpaper_common::Config,
-    wallpaper: Option<wallpaper_common::wallpaper::WallpaperInfo>,
-    //wallpapers: HashMap<String, Wallpaper<'a>>,
+    wallpaper: Option<WallpaperInfo>,
     wallpapers: BTreeMap<String, Wallpaper<'a>>,
     default_preview_image: Image<'a>,
-    //wallpaper_process: Option<Child>,
     /// The current selected screen to set wallpaper.
     select_current_screen: Option<String>,
     animations: Vec<(AnimData, String)>,
